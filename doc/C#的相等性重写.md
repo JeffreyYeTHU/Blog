@@ -9,7 +9,22 @@ public virtual bool Equals (object? obj);
 
 ## 相等性有什么用？
 
+你肯定已经直接或间接的用过相等性判断，但却并没有意识到。如下面的代码：
 
+```csharp
+// What is the use of Equals?
+string name = "Jeffrey";
+if (name == "Jeffrey")  // Direct use: `==` check if two object is equal
+    Console.WriteLine($"Hello {name}");
+
+var strList = name.ToList();
+int idx = strList.IndexOf('f');  // In-direct use: the process to find the index of char 'f' calls this.Equals(Object)
+Console.WriteLine($"Index of 'f' is {idx}");
+```
+
+上面的代码分钟：
+* 第一个例子中，操作符`==`判断两个对象是否相等，是直接使用相等性。
+* 第二个例子中，首先构建了一个列表，然后在这个表里寻找字符`y`的索引。这个寻找的过程，实际上就是遍历列表并比较元素是否与待查找的元素相同，若相同就返回当前元素的索引。这是间接使用相等性。
 
 
 ## 引用相等于值相等
