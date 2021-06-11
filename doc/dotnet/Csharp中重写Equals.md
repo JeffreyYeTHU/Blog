@@ -237,7 +237,7 @@ OK，现在Equals和`==`的结果一样了，我们是否完成任务了呢？
 
 ## 重写GetHashcode()
 
-当然没有。其实，编译器已经在向我们大声疾呼：你实现了Equals， 但是没有实现GetHashcode!
+当然没有。其实，编译器已经在向我们大声疾呼：你重写了Equals， 但是没有重写GetHashcode!
 
 ```csharp
 Severity	Code	Description	Project	File	Line	Suppression State
@@ -258,7 +258,9 @@ string position = PersonPositionDic[pe1];  // Will throw KeyNotFoundException
 Console.WriteLine(position);
 ```
 
-上例中，在从Dic中读取
+上例有两个问题：
+1. pe1与pe2值相等，字典中添加pe1后，再添加pe2没有报duplicate key的错误
+2. 
 
 ### 如何重载GetHashcode？
 

@@ -76,8 +76,8 @@ namespace OverrideEqualsInCSharp
             PersonPositionDic.Add(pe1, "Software Engineer");
             PersonPositionDic.Add(pe2, "Mechanical Engineer");  // NOT report duplicate key error!
 
-            string position = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];
-            string pos = PersonPositionDic[pe1];  // Will throw KeyNotFoundException
+            string position = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];  // Will throw KeyNotFoundException
+            string pos = PersonPositionDic[pe1];
             Console.WriteLine(position);
             Console.WriteLine();
         }
