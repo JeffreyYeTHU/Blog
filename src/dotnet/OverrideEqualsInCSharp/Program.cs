@@ -20,11 +20,6 @@ namespace OverrideEqualsInCSharp
             // ProblemWhenNotOverrideHashcode();
 
             OverrideGetHashCode();
-            unchecked
-            {
-                Console.WriteLine(Int32.MaxValue);
-                Console.WriteLine(Int32.MaxValue + 10);
-            }
         }
 
         private static void OverrideGetHashCode()
