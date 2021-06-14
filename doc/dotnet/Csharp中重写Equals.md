@@ -22,8 +22,8 @@ int idx = strList.IndexOf('f');  // In-direct use: the process to find the index
 Console.WriteLine($"Index of 'f' is {idx}");
 ```
 
-上面的代码分钟：
-* 第一个例子中，操作符`==`判断两个对象是否相等，代码编译后悔使用`Equals`方法，可看做直接使用相等性。
+上面的代码在两个地方使用了相等性判断：
+* 第一个例子中，操作符`==`判断两个对象是否相等，代码编译后会使用`Equals`方法，可看做直接使用相等性。
 * 第二个例子中，首先构建了一个列表，然后在这个表里寻找字符`y`的索引。寻找的过程，实际上就是遍历列表并比较元素是否与待查找的元素相同，若相同就返回当前元素的索引。这是间接使用相等性。因此，相等性在不经意间就会对你的代码运行发生实质性影响。
 
 ## 引用相等与值相等
@@ -168,7 +168,7 @@ public class PersonD
 
     public static bool operator ==(PersonD left, PersonD right)
     {
-        return left == right;
+        return left == right;  // this line introduce a recursive call, which will be a infinite loop
     }
 
     public static bool operator !=(PersonD left, PersonD right)
@@ -183,21 +183,19 @@ public class PersonD
 ```csharp
 var pd1 = new PersonD{ FirstName = "Jeffrey", LastName = "Ye" };
 var pd2 = new PersonD{ FirstName = "Jeffrey", LastName = "Ye" };
-Console.WriteLine($"pc1 == pc2: {pd1 == pd2}");  // this will be a infinite loop
+Console.WriteLine($"pc1 == pc2: {pd1 == pd2}");  // this call will trigger infinite loop
 ```
 
 运行上面的代码将会进入一个死循环，这是因为我们在操作符实现中调用了操作符自己，形成了一个递归调用的死循环！这是实现`==`操作符最需要注意的地方。这个死循环最终会以经典的Stack Overflow错误表现出来:
 
-```
-Stack overflow.
-Repeat 19270 times:
---------------------------------
-   at OverrideEqualsInCSharp.PersonD.op_Equality(OverrideEqualsInCSharp.PersonD, OverrideEqualsInCSharp.PersonD)
---------------------------------
-   at OverrideEqualsInCSharp.Program.Main(System.String[])
-```
+> Stack overflow.
+> Repeat 19270 times:
+> 
+> at OverrideEqualsInCSharp.PersonD.op_Equality(OverrideEqualsInCSharp.PersonD, OverrideEqualsInCSharp.PersonD)
+> 
+> at OverrideEqualsInCSharp.Program.Main(System.String[])
 
-Fix：
+解决的办法就是实现`==`时，调用`Equals`，而不是调用操作符自己。
 
 ```csharp
 public class PersonE
@@ -218,12 +216,12 @@ public class PersonE
     public static bool operator ==(PersonE left, PersonE right)
     {
         if (left is null) return right is null;
-        return left.Equals(right);
+        return left.Equals(right);  // call Equals
     }
 
     public static bool operator !=(PersonE left, PersonE right)
     {
-        return !(left == right);
+        return !(left == right);  // Here can call the ==
     }
 }
 
@@ -326,8 +324,8 @@ Console.WriteLine(position);
 首先，在hashcode的实现中，整数在被放大，因此有可能溢出:
 
 ```csharp
-Console.WriteLine(Int32.MaxValue);
-Console.WriteLine(Int32.MaxValue + 10);
+Console.WriteLine(Int32.MaxValue);  // 2147483647
+Console.WriteLine(Int32.MaxValue + 10);  // -2147483639
 ```
 
 我们可以告诉编译器，不用在这里检查，因为hashcode并不关心这个check，放弃check相当于取mod。
@@ -395,7 +393,7 @@ public class PersonF
 }
 ```
 
-这也太复杂了，有么有简单一点的方法？有，如果你能使用.NET Core 2.1+, 那么System.HashCode struct可以让事情变得简单。
+实现完成，可是这也太复杂了，有没有简单一点的方法？有，如果你能使用.NET Core 2.1+, 那么System.HashCode struct可以让事情变得简单。
 
 ```csharp
 public override int GetHashCode()
@@ -437,12 +435,12 @@ public record PersonG
 ```csharp
 var pg1 = new PersonG{ FirstName = "Jeffrey", LastName = "Ye" };
 var pg2 = new PersonG{ FirstName = "Jeffrey", LastName = "Ye" };
-Console.WriteLine($"pg1.Equals(pg2): {pg1.Equals(pg2)}");
-Console.WriteLine($"pg1 == pg2: {pg1 == pg2}");
+Console.WriteLine($"pg1.Equals(pg2): {pg1.Equals(pg2)}");  // true
+Console.WriteLine($"pg1 == pg2: {pg1 == pg2}");  // true
 Dictionary<PersonG, string> PersonPositionDic = new();
 PersonPositionDic.Add(pg1, "Software Engineer");
-PersonPositionDic.Add(pg2, "Mechanical Engineer");
-Console.WriteLine(PersonPositionDic[new PersonG{ FirstName = "Jeffrey", LastName = "Ye" }]);
+// PersonPositionDic.Add(pg2, "Mechanical Engineer");  // will throw duplicate key error
+Console.WriteLine(PersonPositionDic[new PersonG{ FirstName = "Jeffrey", LastName = "Ye" }]);  // Software Engineer
 ```
 
 一切都按预期工作，就这么简单。

@@ -9,23 +9,75 @@ namespace OverrideEqualsInCSharp
     {
         static void Main(string[] args)
         {
-            WhatIsTheUseOfEquals();
+            // WhatIsTheUseOfEquals();
 
+            // DefaultSemanticOfEqual();
 
-            // Reference equal, it's about identity
-            var p1 = new Person { FirstName = "Jeffrey", LastName = "Ye" };
-            var p2 = p1;  // Shadow copy, reference to the same object
-            var p3 = new Person { FirstName = "Jeffrey", LastName = "Ye" };  // A different person with the same name
-            Console.WriteLine($"Object.ReferenceEquals(p2, p1): {Object.ReferenceEquals(p2, p1)}");  // true
-            Console.WriteLine($"Object.ReferenceEquals(p3, p1): {Object.ReferenceEquals(p3, p1)}");  // false
+            // OverrideEqualMethod();
 
-            // when not override Equals, it is default to be ReferenceEqual.
-            Console.WriteLine($"p2.Equals(p1): {p2.Equals(p1)}");  // true
-            Console.WriteLine($"p3.Equals(p1): {p3.Equals(p1)}");  // false
+            // OverrideEqualOperator();
+
+            // ProblemWhenNotOverrideHashcode();
+
+            OverrideGetHashCode();
+            unchecked
+            {
+                Console.WriteLine(Int32.MaxValue);
+                Console.WriteLine(Int32.MaxValue + 10);
+            }
+        }
+
+        private static void OverrideGetHashCode()
+        {
+            Dictionary<PersonF, string> PersonPositionDic = new();
+            PersonPositionDic.Add(new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }, "Software Engineer");
+            string position = PersonPositionDic[new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }];
+            Console.WriteLine(position);
+        }
+
+        private static void ProblemWhenNotOverrideHashcode()
+        {
+            // Problem when not override GetHashcode
+            var pe1 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
+            var pe2 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
+            Dictionary<PersonE, string> PersonPositionDic = new();
+            PersonPositionDic.Add(pe1, "Software Engineer");
+            PersonPositionDic.Add(pe2, "Mechanical Engineer");  // NOT report duplicate key error!
+
+            string pos = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];  // Will throw KeyNotFoundException
+            Console.WriteLine(pos);
+            Console.WriteLine();
+        }
+
+        private static void OverrideEqualOperator()
+        {
+            // How == will act when not override
+            var pc1 = new PersonC { FirstName = "Jeffrey", LastName = "Ye" };
+            var pc2 = new PersonC { FirstName = "Jeffrey", LastName = "Ye" };
+            Console.WriteLine($"pc1.Equals(pc2): {pc1.Equals(pc2)}");
+            Console.WriteLine($"pc1 == pc2: {pc1 == pc2}");
             Console.WriteLine();
 
 
+            // Wrong implementation lead to infinite loop
+            var pd1 = new PersonD { FirstName = "Jeffrey", LastName = "Ye" };
+            var pd2 = new PersonD { FirstName = "Jeffrey", LastName = "Ye" };
+            Console.WriteLine($"pc1 == pc2: {pd1 == pd2}");  // this will be a infinite loop
+            Console.WriteLine();
+
+
+            // Correct implementation
+            var pe1 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
+            var pe2 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
+            Console.WriteLine($"pe1.Equals(pe2): {pe1.Equals(pe2)}");
+            Console.WriteLine($"pc1 == pc2: {pe1 == pe2}");
+            Console.WriteLine();
+        }
+
+        private static void OverrideEqualMethod()
+        {
             // First attempt to override Equals
+            var p1 = new Person { FirstName = "Jeffrey", LastName = "Ye" };
             var pa1 = new PersonA { FirstName = "Jeffrey", LastName = "Ye" };
             var pa2 = new PersonA { FirstName = "Jeffrey", LastName = "Ye" };
             Console.WriteLine($"pa1.Equals(pa2): {pa1.Equals(pa2)}"); // true
@@ -38,41 +90,21 @@ namespace OverrideEqualsInCSharp
             Console.WriteLine($"pb1.Equals(pb2): {pb1.Equals(pb2)}");
             Console.WriteLine($"pb1.Equals(p1): {pb1.Equals(p1)}");
             Console.WriteLine();
+        }
 
+        private static void DefaultSemanticOfEqual()
+        {
+            // Reference equal, it's about identity
+            var p1 = new Person { FirstName = "Jeffrey", LastName = "Ye" };
+            var p2 = p1;  // Shadow copy, reference to the same object
+            var p3 = new Person { FirstName = "Jeffrey", LastName = "Ye" };  // A different person with the same name
+            Console.WriteLine($"Object.ReferenceEquals(p2, p1): {Object.ReferenceEquals(p2, p1)}");  // true
+            Console.WriteLine($"Object.ReferenceEquals(p3, p1): {Object.ReferenceEquals(p3, p1)}");  // false
 
-            // How == will act when not override
-            var pc1 = new PersonC { FirstName = "Jeffrey", LastName = "Ye" };
-            var pc2 = new PersonC { FirstName = "Jeffrey", LastName = "Ye" };
-            Console.WriteLine($"pc1.Equals(pc2): {pc1.Equals(pc2)}");
-            Console.WriteLine($"pc1 == pc2: {pc1 == pc2}");
+            // when not override Equals, it is default to be ReferenceEqual.
+            Console.WriteLine($"p2.Equals(p1): {p2.Equals(p1)}");  // true
+            Console.WriteLine($"p3.Equals(p1): {p3.Equals(p1)}");  // false
             Console.WriteLine();
-
-
-            // Wrong implementation lead to infinite loop
-            var pd1 = new PersonD { FirstName = "Jeffrey", LastName = "Ye" };
-            var pd2 = new PersonD { FirstName = "Jeffrey", LastName = "Ye" };
-            //Console.WriteLine($"pc1 == pc2: {pd1 == pd2}");  // this will be a infinite loop
-            Console.WriteLine();
-
-
-            // Correct implementation
-            var pe1 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
-            var pe2 = new PersonE { FirstName = "Jeffrey", LastName = "Ye" };
-            Console.WriteLine($"pe1.Equals(pe2): {pe1.Equals(pe2)}");
-            Console.WriteLine($"pc1 == pc2: {pe1 == pe2}");
-            Console.WriteLine();
-
-
-            // Problem when not override GetHashcode
-            Dictionary<PersonE, string> PersonPositionDic = new();
-            PersonPositionDic.Add(pe1, "Software Engineer");
-            PersonPositionDic.Add(pe2, "Mechanical Engineer");  // NOT report duplicate key error!
-
-            //string pos = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];  // Will throw KeyNotFoundException
-            //Console.WriteLine(pos);
-            Console.WriteLine();
-
-
         }
 
         private static void WhatIsTheUseOfEquals()
