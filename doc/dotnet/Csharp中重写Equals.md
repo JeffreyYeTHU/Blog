@@ -239,12 +239,13 @@ OK，现在Equals和`==`的结果一样了，我们是否完成任务了呢？
 
 当然没有。其实，编译器已经在向我们大声疾呼：你重写了Equals， 但是没有重写GetHashcode!
 
-```csharp
-Severity	Code	Description	Project	File	Line	Suppression State
-Warning	CS0659	'PersonE' overrides Object.Equals(object o) but does not override Object.GetHashCode()	OverrideEqualsInCSharp	D:\Jeffery\Github\Blog\src\dotnet\OverrideEqualsInCSharp\Person.cs	11	Active
-```
+> Severity	Code	Description	Project	File	Line	Suppression State
+> Warning	CS0659	'PersonE' overrides Object.Equals(object o) but does not override 
+> Object.GetHashCode()	
+> OverrideEqualsInCSharp D:\Jeffery\Github\Blog\src\dotnet\OverrideEqualsInCSharp\Person.cs	11	Active
 
-编译器为什么要发出这个警告呢？
+
+编译器为什么要发出这个警告呢？因为不重写GetHashcode很可能引入致命的Bug。
 
 假设现在程序需要组织以Person为Key的键值对数据结构，我们来看看会发生什么。
 
@@ -253,18 +254,24 @@ Dictionary<PersonE, string> PersonPositionDic = new();
 PersonPositionDic.Add(pe1, "Software Engineer");
 PersonPositionDic.Add(pe2, "Mechanical Engineer");  // NOT report duplicate key error!
 
-string position = PersonPositionDic[new PersonE{ FirstName = "Jeffrey", LastName = "Ye" }];
-string position = PersonPositionDic[pe1];  // Will throw KeyNotFoundException
-Console.WriteLine(position);
+string pos = PersonPositionDic[new PersonE { FirstName = "Jeffrey", LastName = "Ye" }];  // Will throw KeyNotFoundException
 ```
 
-上例有两个问题：
+上例有两个点需要注意：
 1. pe1与pe2值相等，字典中添加pe1后，再添加pe2没有报duplicate key的错误
-2. 
+2. 当用一个值相等的key到字典中索引时，会报KeyNotFoundException。
+
+上述两点并不一定就是问题，如果你恰好需要以对象的identity作为key，那就完全OK。但是，如果你已经为对象重写了Equals，而仍然在使用hash的数据结构（如hash table）中保留以identity的key就让对使用这个类的人产生极大的困惑。
 
 ### 如何重载GetHashcode？
 
-让我们通过重载GetHashcode来解决上面的问题。下面的实现参考了：[Stackoverflow gethashcode question](http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode)
+知道了为啥要重写hashcode后，就知道了重写它的原则：
+1. 如果两个对象Equals方法返回相等，那么它们的hashcode必须相等。
+2. 为了诸如hash table的数据结构高效运行，hashcode最好分布均匀，冲突少。
+
+满足第1条必要条件容易，但第二条就不是那么容易了。幸好，我们不需要自己去研究如何实现好的hashcode，已经有人帮我们实现了。例如，下面的实现参考了：[stackoverflow gethashcode question](http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode)
+
+```csharp
 public class PersonF
 {
     public string FirstName { get; set; }
@@ -302,18 +309,29 @@ public class PersonF
         return hash;
     }
 }
+```
+
 现在使用字典就没有问题了：
+
+```csharp
 Dictionary<PersonF, string> PersonPositionDic = new();
 PersonPositionDic.Add(new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }, "Software Engineer");
 PersonPositionDic.Add(new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }, "Mechanical Engineer");
 string position = PersonPositionDic[new PersonF{ FirstName = "Jeffrey", LastName = "Ye" }];
 Console.WriteLine(position);
+```
+
 一切看起来都很完美，但事实并非如此。
 
-首先，在hashcode的实现中，整数在被放大，因此有可能溢出。
+首先，在hashcode的实现中，整数在被放大，因此有可能溢出:
+
+```csharp
 Console.WriteLine(Int32.MaxValue);
 Console.WriteLine(Int32.MaxValue + 10);
+```
+
 我们可以告诉编译器，不用在这里检查，因为hashcode并不关心这个check，放弃check相当于取mod。
+
 ```csharp
 public override int GetHashCode()
 {
@@ -329,7 +347,10 @@ public override int GetHashCode()
     }
 }
 ```
+
 其次，我们可以通过把hash base与multiplier增大来降低hash冲突，并通过XOR运算提高效率，改进后的代码：
+
+```csharp
 public class PersonF
 {
     public string FirstName { get; set; }
@@ -372,7 +393,10 @@ public class PersonF
         }
     }
 }
-如果能使用.NET Core 2.1+, 那么System.HashCode struct可以让事情变得简单。
+```
+
+这也太复杂了，有么有简单一点的方法？有，如果你能使用.NET Core 2.1+, 那么System.HashCode struct可以让事情变得简单。
+
 ```csharp
 public override int GetHashCode()
 {
@@ -382,7 +406,9 @@ public override int GetHashCode()
     return hash.ToHashCode();
 }
 ```
+
 or:
+
 ```csharp
 public override int GetHashCode()
 {
@@ -390,16 +416,25 @@ public override int GetHashCode()
 }
 ```
 
-property为null的情形，这个struct也能处理，因此不用担心。
+更棒的是，property为null的情形，这个struct也能处理，因此不用担心。
+
 ## 结束了吗？
 
 没有。从上面的实现可以发现，要正确重载相等不是一件容易的事。这就要回到最基本的问题，何时应该要重写相等呢？通常是在你需要对象表现出纯数据特征时，也被非正式的成为数据对象。C#9引入了一个叫Record的新类型，专为数据对象而生。
+
+```csharp
 public record PersonG
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
 }
-任务完成！让我们来测试一下：
+```
+
+任务完成，就这么简单！这是因为，在声明类型为record时，编译时，编译器会帮我们以值相等的语义重写`Equals, ==, !=, Gethashcode, ToString`，这是多么完美！
+
+让我们来测试一下：
+
+```csharp
 var pg1 = new PersonG{ FirstName = "Jeffrey", LastName = "Ye" };
 var pg2 = new PersonG{ FirstName = "Jeffrey", LastName = "Ye" };
 Console.WriteLine($"pg1.Equals(pg2): {pg1.Equals(pg2)}");
@@ -408,7 +443,11 @@ Dictionary<PersonG, string> PersonPositionDic = new();
 PersonPositionDic.Add(pg1, "Software Engineer");
 PersonPositionDic.Add(pg2, "Mechanical Engineer");
 Console.WriteLine(PersonPositionDic[new PersonG{ FirstName = "Jeffrey", LastName = "Ye" }]);
+```
+
+一切都按预期工作，就这么简单。
+
 ## 总结
 
-1. 如果你需要定义的类，概念上更趋向于数据对象（data objects），那么可以考虑使用record，这样就不用操心相等的重载。
-2. 如果不适合或者不能使用record，同时还要重载相等，那么你可以参考上面的方法来做。需要记住重载Equals时，通常都需要同时重载GetHashCode，操作符`==`，操作符`!=`.
+1. 如果你需要定义的类，概念上更趋向于数据对象（data objects），那么应该考虑使用record，这样就不用操心相等的重载，避免了不必要的麻烦。
+2. 实在不适合使用，或者受SDK限制不能使用record，同时还要重载相等，那么你可以参考上面的方法来做。需要记住重载Equals时，通常都需要同时重载GetHashCode、操作符`==`和`!=`.

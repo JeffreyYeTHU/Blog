@@ -108,4 +108,42 @@ namespace OverrideEqualsInCSharp
             return !(left == right);  // Call the already implemented ==
         }
     }
+
+    public class PersonF
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public override bool Equals(Object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            var other = obj as PersonF;
+            return this.FirstName.Equals(other.FirstName)
+                && this.LastName.Equals(other.LastName);
+        }
+
+        public static bool operator ==(PersonF left, PersonF right)
+        {
+            if (left is null) return right is null;
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PersonF left, PersonF right)
+        {
+            return !(left == right);
+        }
+
+        public override int GetHashCode()
+        {
+            int HashingBase = 13;
+            int HashingMultiplier = 7;
+
+            int hash = HashingBase;
+            hash = (hash * HashingMultiplier) + (FirstName is Object ? FirstName.GetHashCode() : 0);
+            hash = (hash * HashingMultiplier) + (LastName is Object ? LastName.GetHashCode() : 0);
+            return hash;
+        }
+    }
 }
