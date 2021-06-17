@@ -39,3 +39,18 @@ Docker在手，天下我有。这个工具有docker image，因此可以非常�
 5. 命令最后的`up/down x`代表的是，以数据库当前的版本为起点，向前迁移x个版本/向后回滚x个版本。
 
 数据库迁移后，数据库会新增一个名为`schema_migrations`的表格，用于记录版本信息。这个表格只包含两列。version列表征当前版本号，dirty列表征迁移是否成功。如果dirty为true则迁移失败。
+
+还可以build新的image，把迁移sql文件拷贝到image中，这样使用时就不需要再bind volume。
+
+```docker
+ALTER TABLE users
+ADD COLUMN email varchar(50);
+```
+
+```bash
+// build image
+docker build -t migrator .
+
+// run container
+docker run --network host migrator --path=/migrations/ --database "mysql://zuru:123456@tcp(192.168.56.1:3306)/testdb" up 1
+```
