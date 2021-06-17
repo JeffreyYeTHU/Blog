@@ -32,7 +32,7 @@ Docker在手，天下我有。这个工具有docker image，因此可以非常�
 ```
 
 命令的使用注意事项：
-1. 参数-v是用于告诉docker，需要寻找的迁移文件（source）在何处。
+1. 参数-v是用于告诉docker，需要寻找的迁移文件（source）在何处。要使用绝对路径。
 2. image的名称叫`migrate/migrate`
 3. mysql的数据库连接串，要用双引号引起来。否则会报`ParserError：MissingPropertyName`
 4. 连接串中的host地址，不能使用localhost或者127.0.0.1，使用当前主机IP设置中所配置的IP地址。否则会报连接错误`dial tcp 127.0.0.1:3306: connect: connection refused`
