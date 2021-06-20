@@ -1,4 +1,4 @@
-# 如何在DotNet中正确地benchmark
+# 在DotNet中优雅地benchmark
 
 Benchmark也即基准测试，是性能调优基础。过早的优化是万恶之源，没有基准比较的的优化则是自欺欺人：只有相同的比较基准，才能判断是否完成优化。本文就讲一讲如何正确的benchmark。
 
@@ -103,4 +103,7 @@ BenchmarkRunner.Run<MyStringContactor>();
 
 ## 总结
 
-总之，当你需要做benchmark时，最好使用相关的类库。如果是.NET项目，使用BenchmarkDotNet就是很好的选择。
+总之，当你需要性能调优时，做benchmark：
+1. 影响测量结果的最大变量是OS，基本思路是多次运行做统计运算，统计中考虑系统预热、非实际工作所花时间等的影响。
+2. 为了避免这些麻烦，最好使用相关的类库。如果是.NET项目，可选择BenchmarkDotNet。
+3. 本文的示例代码：[BenchmarkDoneRight](../../src/dotnet/BenchmarkDoneRight)
