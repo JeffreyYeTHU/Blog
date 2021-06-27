@@ -6,7 +6,7 @@
 
 **线程**
 
-线程（Thread）是OS为应用程序提供的抽象，它程序执行任务的基本单元，在一个线程中，任务顺序执行。
+线程（Thread）是OS为应用程序提供的抽象，它是程序执行任务的基本单元，在一个线程中，任务顺序执行。
 
 ```
 ONE thread: task1 -> task2 -> task3
@@ -50,9 +50,9 @@ static async Task<int> WorkHaveReturnAsync()
 
 调用异步方法时，使用`await`，并在该方法的声明中使用`async Task/Task<T>`。所有的magic都发生在这个`await`上。
 
-C#维护了一个[线程池](https://docs.microsoft.com/en-us/dotnet/api/system.threading.threadpool?view=net-5.0)，线程池里的线程都是background thread。当一个Task被await后，它就进入到线程池的待执行任务的队列中。线程池中有多个线程，只有有闲置的线程，就会到任务队列中获取任务并执行。当线程池任务不是大量CPU密集型任务时，进入线程池就可看做时并行的。
+C#维护了一个[managed thread pool](https://docs.microsoft.com/en-us/dotnet/standard/threading/the-managed-thread-pool)，线程池里的线程都是background thread。当一个Task被await后，它就进入到线程池的待执行任务的队列中。线程池中有多个线程，只要有闲置的线程，就会到任务队列中获取任务并执行。当线程池任务不是大量CPU密集型任务时，进入线程池就可看做时并行的。
 
-Task是被线程池线程执行，完成后通知调用线程，这样调用线程就可以接着执行了。
+Task是被线程池线程执行，完成后通知调用线程，这样调用线程就可以接着执行了。C#通过内建的线程池来执行异步任务这一点，是理解异步编程的关键。
 
 ## 不阻塞UI
 
