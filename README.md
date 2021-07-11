@@ -12,8 +12,13 @@
 ## .NET
 
 1. [C#的相等性重写](doc/dotnet/Csharp中重写Equals.md)
-2. Benchmark
-3. Async and Await
+2. [Dotnet Benchmark](doc/dotnet/在DotNet中优雅地benchmark.md)
+3. [C#异步编程](doc/dotnet/CSharp异步编程.md)
+4. [用Docker在本地运行nuget server](doc/dotnet/使用Docker在本地运行Nuget%20Server.md)
+
+## Database
+
+1. [数据库迁移工具golang-migrate的使用](doc/database/数据库迁移工具golang-migrate的使用.md)
 
 ## Tools
 
